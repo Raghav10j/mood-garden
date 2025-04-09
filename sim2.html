@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mood Garden Simulator 🌺</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to top, #a1ffce, #faffd1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+      color: #333;
+    }
+    video.bg-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .section {
+      display: none;
+      text-align: center;
+      padding: 15px;
+      z-index: 1;
+    }
+    .visible {
+      display: block;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 8px;
+      background-color: #ff6f91;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+      transition: transform 0.3s;
+    }
+    button:hover {
+      transform: scale(1.1);
+    }
+    .flower {
+      font-size: 50px;
+      cursor: pointer;
+    }
+    input[type='text'] {
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+    }
+    .rose {
+      position: absolute;
+      top: -50px;
+      pointer-events: none;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0% {
+        transform: translateY(-100px);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh);
+        opacity: 0.3;
+      }
+    }
+
+    /* Music toggle button */
+    #musicToggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #ffb6c1;
+      border: none;
+      border-radius: 50%;
+      font-size: 24px;
+      padding: 10px;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Spin Wheel Animation */
+    @keyframes popText {
+      0% {
+        transform: scale(1);
+        opacity: 0;
+      }
+      30% {
+        transform: scale(1.4);
+        opacity: 1;
+      }
+      60% {
+        transform: scale(1);
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+    #reward {
+      font-size: 20px;
+      margin-top: 20px;
+      transition: all 0.3s ease;
+    }
+    .animate-reward {
+      animation: popText 1s ease forwards;
+      font-size: 28px;
+      color: #e91e63;
+      font-weight: bold;
+    }
+
+    /* Quote Animation */
+    #quoteText {
+      font-size: 22px;
+      font-weight: normal;
+      margin-top: 20px;
+      opacity: 0;
+      transition: all 0.5s ease;
+    }
+
+    .animate-quote {
+      animation: showQuote 1.2s ease-out forwards;
+    }
+
+    @keyframes showQuote {
+      0% {
+        transform: scale(0.8);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+        font-weight: bold;
+        font-size: 28px;
+        color: #3c096c;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Videos -->
+  <video autoplay loop muted class="bg-video" id="cowVideo">
+    <source src="cow.mp4" type="video/mp4" />
+  </video>
+  <video autoplay loop muted class="bg-video" id="octVideo" style="display: none">
+    <source src="oct.mp4" type="video/mp4" />
+  </video>
+
+  <!-- Background Music -->
+  <audio id="bgMusic" loop>
+    <source src="untitled.mp3" type="audio/mpeg" />
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Music Toggle Button -->
+  <button id="musicToggle" onclick="toggleMusic()">🎵</button>
+
+  <!-- Mood Selection -->
+  <div id="moodSelection" class="section visible">
+    <h2>🌸 How are you feeling today? 🌸</h2>
+    <button onclick="showReason()">Happy 😊</button>
+    <button onclick="showReason()">Stressed 😖</button>
+    <button onclick="showReason()">Sad 😢</button>
+    <button onclick="showReason()">IDK 🤔</button>
+  </div>
+
+  <!-- Reason -->
+  <div id="reasonSection" class="section">
+    <h2>🌷 What's the reason for your mood? 🌷</h2>
+    <input type="text" placeholder="Share your thoughts" /><br />
+    <button onclick="showFlower()">Next 🌹</button>
+  </div>
+
+  <!-- Flower -->
+  <div id="flowerSection" class="section">
+    <h2>🌺 Click the Flower 🌺</h2>
+    <div class="flower" onclick="showFlowersAnimation()">🌺</div>
+  </div>
+
+  <!-- Wheel -->
+  <div id="wheelSection" class="section">
+    <h2>🎡 Spin the Mood Wheel 🎡</h2>
+    <button onclick="spinWheel()">Spin</button>
+    <p id="reward"></p>
+  </div>
+
+  <!-- Quote -->
+  <div id="quoteSection" class="section">
+    <h2>🌠 Today's Special Quote 🌠</h2>
+    <p id="quoteText"></p>
+    <button onclick="restartSimulator()">Restart 🌸</button>
+  </div>
+
+  <script>
+    function showReason() {
+      const music = document.getElementById("bgMusic");
+      if (music.paused) music.play();
+      document.getElementById("moodSelection").classList.remove("visible");
+      document.getElementById("reasonSection").classList.add("visible");
+    }
+
+    function showFlower() {
+      document.getElementById("reasonSection").classList.remove("visible");
+      document.getElementById("flowerSection").classList.add("visible");
+      switchToOctopus();
+    }
+
+    function showFlowersAnimation() {
+      for (let i = 0; i < 30; i++) {
+        const rose = document.createElement("div");
+        rose.className = "rose";
+        rose.style.left = Math.random() * 100 + "vw";
+        rose.style.animationDuration = Math.random() * 3 + 4 + "s";
+        rose.style.animationDelay = Math.random() * 5 + "s";
+        rose.innerText = "🌹";
+        rose.style.fontSize = "32px";
+        document.body.appendChild(rose);
+      }
+      setTimeout(() => {
+        document.getElementById("flowerSection").classList.remove("visible");
+        document.getElementById("wheelSection").classList.add("visible");
+      }, 3000);
+    }
+
+    function spinWheel() {
+      const rewards = [
+        "Raghav owes you matcha cheesecake 🍰",
+        "Time to get biryani 🍛",
+        "F1 paddock passes 🏎️"
+      ];
+      const rewardText = document.getElementById("reward");
+      rewardText.classList.remove("animate-reward");
+      void rewardText.offsetWidth; // Force reflow
+      const selected = rewards[Math.floor(Math.random() * rewards.length)];
+      rewardText.innerText = selected;
+      rewardText.classList.add("animate-reward");
+      setTimeout(showQuote, 2500);
+    }
+
+    function showQuote() {
+      document.getElementById("wheelSection").classList.remove("visible");
+      document.getElementById("quoteSection").classList.add("visible");
+
+      const quotes = [
+        "Something amazing is coming your way. Stay open to the magic. ✨",
+        "Today might be the start of the best chapter of your life. 📖",
+        "Every sunrise brings a fresh start. You're doing just fine. 🌅",
+        "The future is brighter than you think. Keep moving forward. ☀️",
+        "Your dreams are valid, your voice matters, and your journey is beautiful. 🚀",
+        "Small steps today build the life you’re dreaming of tomorrow. 👣",
+        "You’re glowing in ways you can’t even see yet. Just wait. 🌟",
+        "The universe is not done being kind to you. Hold on. 🌈",
+        "Every moment holds the potential to become something extraordinary. ✨"
+      ];
+
+      const quoteText = document.getElementById("quoteText");
+      quoteText.classList.remove("animate-quote");
+      void quoteText.offsetWidth;
+      quoteText.innerText = quotes[Math.floor(Math.random() * quotes.length)];
+      quoteText.classList.add("animate-quote");
+    }
+
+    function restartSimulator() {
+      location.reload();
+    }
+
+    function switchToOctopus() {
+      document.getElementById("cowVideo").style.display = "none";
+      document.getElementById("octVideo").style.display = "block";
+    }
+
+    function toggleMusic() {
+      const music = document.getElementById("bgMusic");
+      music.paused ? music.play() : music.pause();
+    }
+  </script>
+</body>
+</html>
